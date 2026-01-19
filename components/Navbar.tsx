@@ -12,16 +12,23 @@ export default function Navbar() {
   const { wishlistCount } = useWishlist();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
   const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // For now, redirect to a search page or filter (simulated)
-      // Since we don't have a search API, we'll just log it or maybe redirect to home with a query param
-      // But a better UX for this task is to simple alerts or just console log
-      console.log("Searching for:", searchQuery);
-      alert(`Search functionality is simulated. You searched for: ${searchQuery}`);
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(""); // Clear search after navigation
+    }
+  };
+
+  const handleMobileSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mobileSearchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(mobileSearchQuery.trim())}`);
+      setMobileSearchQuery(""); // Clear search after navigation
+      setIsMenuOpen(false); // Close mobile menu
     }
   };
 
@@ -113,14 +120,18 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="fixed inset-0 top-16 z-40 bg-white lg:hidden">
           <div className="p-4">
-            <div className="relative mb-6">
+            <form onSubmit={handleMobileSearch} className="relative mb-6">
               <input
                 type="text"
                 placeholder="Search products..."
+                value={mobileSearchQuery}
+                onChange={(e) => setMobileSearchQuery(e.target.value)}
                 className="w-full rounded-full border bg-gray-50 py-2 pl-4 pr-10 focus:border-brand-teal focus:outline-none"
               />
-              <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-            </div>
+              <button type="submit" className="absolute right-3 top-2.5 h-5 w-5 text-gray-400 hover:text-brand-teal">
+                <Search className="h-5 w-5" />
+              </button>
+            </form>
             <ul className="space-y-4 font-medium uppercase tracking-wide">
               {["Home", "Men", "Women", "Kids", "Accessories", "Contact Us"].map((item) => (
                 <li key={item}>
