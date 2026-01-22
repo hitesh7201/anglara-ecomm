@@ -1,14 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ArrowRight, ShoppingCart } from "lucide-react";
-import { products } from "@/data/products";
+import { Product, productApi } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 
 export default function Home() {
   const { addToCart } = useCart();
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      const fetchedProducts = await productApi.getAllProducts();
+      setProducts(fetchedProducts);
+      setLoading(false);
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div className="flex flex-col gap-20 pb-20">
@@ -69,39 +81,56 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {products.map((product) => (
-            <div key={product.id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:shadow-xl">
-              <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-contain p-6 transition-transform duration-500 group-hover:scale-110"
-                />
-              </div>
-              <div className="mt-5 flex flex-1 flex-col">
-                <h3 className="text-sm font-bold text-brand-navy line-clamp-2 h-10 leading-tight">
-                  {product.name}
-                </h3>
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-lg font-black text-brand-teal">${product.price.toFixed(2)}</p>
-                  <button 
-                    onClick={() => {
-                      addToCart({
-                        id: product.id,
-                        title: product.name,
-                        price: product.price,
-                        image: product.image
-                      });
-                    }}
-                    className="bg-brand-teal text-white p-2 rounded-full hover:bg-brand-navy transition-colors"
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                  </button>
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4">
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200 animate-pulse"></div>
+                <div className="mt-5 flex flex-1 flex-col">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse w-16"></div>
+                    <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            products.map((product) => (
+              <div key={product.id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:shadow-xl">
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-contain p-6 transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
+                <div className="mt-5 flex flex-1 flex-col">
+                  <h3 className="text-sm font-bold text-brand-navy line-clamp-2 h-10 leading-tight">
+                    {product.name}
+                  </h3>
+                  <div className="mt-4 flex items-center justify-between">
+                    <p className="text-lg font-black text-brand-teal">${product.price.toFixed(2)}</p>
+                    <button 
+                      onClick={() => {
+                        addToCart({
+                          id: product.id,
+                          title: product.name,
+                          price: product.price,
+                          image: product.image
+                        });
+                      }}
+                      className="bg-brand-teal text-white p-2 rounded-full hover:bg-brand-navy transition-colors"
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </section>
 
@@ -115,39 +144,56 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {products.slice(0, 4).map((product) => (
-            <div key={product.id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:shadow-xl">
-              <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-contain p-6 transition-transform duration-500 group-hover:scale-110"
-                />
-              </div>
-              <div className="mt-5 flex flex-1 flex-col">
-                <h3 className="text-sm font-bold text-brand-navy line-clamp-2 h-10 leading-tight">
-                  {product.name}
-                </h3>
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-lg font-black text-brand-teal">${product.price.toFixed(2)}</p>
-                  <button 
-                    onClick={() => {
-                      addToCart({
-                        id: product.id,
-                        title: product.name,
-                        price: product.price,
-                        image: product.image
-                      });
-                    }}
-                    className="bg-brand-teal text-white p-2 rounded-full hover:bg-brand-navy transition-colors"
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                  </button>
+          {loading ? (
+            // Loading skeleton for popular products
+            Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4">
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200 animate-pulse"></div>
+                <div className="mt-5 flex flex-1 flex-col">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse w-16"></div>
+                    <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            products.slice(0, 4).map((product) => (
+              <div key={product.id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:shadow-xl">
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-contain p-6 transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
+                <div className="mt-5 flex flex-1 flex-col">
+                  <h3 className="text-sm font-bold text-brand-navy line-clamp-2 h-10 leading-tight">
+                    {product.name}
+                  </h3>
+                  <div className="mt-4 flex items-center justify-between">
+                    <p className="text-lg font-black text-brand-teal">${product.price.toFixed(2)}</p>
+                    <button 
+                      onClick={() => {
+                        addToCart({
+                          id: product.id,
+                          title: product.name,
+                          price: product.price,
+                          image: product.image
+                        });
+                      }}
+                      className="bg-brand-teal text-white p-2 rounded-full hover:bg-brand-navy transition-colors"
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </section>
     </div>

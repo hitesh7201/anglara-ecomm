@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { products, Product } from "@/data/products";
+import { Product, productApi } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { ShoppingCart, Heart, ArrowLeft, Check, Truck, ShieldCheck, RefreshCw } from "lucide-react";
@@ -12,18 +12,58 @@ import ProductCard from "@/components/ProductCard";
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const productId = parseInt(id);
-  const product = products.find((p) => p.id === productId);
   
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [isAdded, setIsAdded] = useState(false);
-  
-  // Find related products (same category, excluding current)
-  const relatedProducts = product 
-    ? products
-        .filter(p => p.category === product.category && p.id !== product.id)
-        .slice(0, 4)
-    : [];
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      const fetchedProduct = await productApi.getProductById(productId);
+      setProduct(fetchedProduct);
+      
+      if (fetchedProduct) {
+        // Get all products to find related ones
+        const allProducts = await productApi.getAllProducts();
+        const related = allProducts
+          .filter(p => p.category === fetchedProduct.category && p.id !== fetchedProduct.id)
+          .slice(0, 4);
+        setRelatedProducts(related);
+      }
+      
+      setLoading(false);
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-32 mb-8"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 mb-20">
+            <div className="aspect-square bg-gray-200 rounded-3xl"></div>
+            <div className="flex flex-col justify-center">
+              <div className="h-6 bg-gray-200 rounded w-20 mb-4"></div>
+              <div className="h-12 bg-gray-200 rounded w-3/4 mb-6"></div>
+              <div className="h-8 bg-gray-200 rounded w-32 mb-8"></div>
+              <div className="space-y-2 mb-10">
+                <div className="h-4 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+              </div>
+              <div className="h-12 bg-gray-200 rounded mb-12"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
